@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include bullows_erpnext *.css
+recursive-include bullows_erpnext *.csv
+recursive-include bullows_erpnext *.html
+recursive-include bullows_erpnext *.ico
+recursive-include bullows_erpnext *.js
+recursive-include bullows_erpnext *.json
+recursive-include bullows_erpnext *.md
+recursive-include bullows_erpnext *.png
+recursive-include bullows_erpnext *.py
+recursive-include bullows_erpnext *.svg
+recursive-include bullows_erpnext *.txt
+recursive-exclude bullows_erpnext *.pyc
