@@ -49,4 +49,4 @@ def calculate_excise_amount(doc):
 
 	doc.excise_amount = sum([flt(d.tax_amount) for d in doc.get("other_charges") 
 			if cint(d.is_excise_account) == 1])
-	doc.excise_amount_in_words = money_in_words(tot, get_company_currency(self.doc.company))
+	doc.excise_amount_in_words = money_in_words(doc.excise_amount, get_company_currency(self.doc.company))
