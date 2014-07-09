@@ -45,7 +45,7 @@ def validate_grand_total(doc):
 
 def calculate_excise_amount(doc):
 	from frappe.utils import money_in_words
-	from setup.utils import get_company_currency
+	from erpnext.setup.utils import get_company_currency
 
 	doc.excise_amount = sum([flt(d.tax_amount) for d in doc.get("other_charges") 
 			if cint(d.is_excise_account) == 1])
