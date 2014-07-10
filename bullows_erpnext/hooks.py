@@ -70,9 +70,6 @@ doc_events = {
 	"Sales Invoice": {
 		"validate": "bullows_erpnext.bullows_erpnext.sales_invoice.validate",
 	},
-	"C-Form": {
-		"on_submit": "bullows_erpnext.bullows_erpnext.c_form.validate_mandatory_attachment"
-	},
 	"Purchase Order": {
 		"validate": "bullows_erpnext.bullows_erpnext.purchase_order.custom_validate"
 	}

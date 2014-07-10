@@ -4,7 +4,7 @@ import frappe
 def custom_validate(doc, method):
 	for d in doc.get("po_details"):
 		if d.is_scrapped_item == "No":
-			if not d.purchase_rate:
+			if not d.rate:
 				frappe.throw("Row {0}: Rate is mandatory".format(d.idx))
 			if not d.amount:
 				frappe.throw("Row {0}: Amount is mandatory".format(d.idx))
