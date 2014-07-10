@@ -5,9 +5,9 @@ from frappe.utils import flt, cint
 from frappe import _
 
 def validate(doc, method):
-  validate_for_stock_item(doc)
-  validate_grand_total(doc)
-  calculate_excise_amount(doc)
+	validate_for_stock_item(doc)
+	validate_grand_total(doc)
+	calculate_excise_amount(doc)
 
 def validate_for_stock_item(doc):
 	stock_item_lst = []
@@ -36,7 +36,6 @@ def validate_grand_total(doc):
 		tot = tot and flt(tot[0][0]) or 0
 
 		proj_val = frappe.db.get_value("Project", doc.project_name, "project_value")
-
 		if (tot + flt(doc.net_total)) > proj_val:
 			frappe.throw(_("Total Value of Project exceeded."))
 		if (tot + flt(doc.net_total)) == proj_val:
@@ -49,4 +48,4 @@ def calculate_excise_amount(doc):
 
 	doc.excise_amount = sum([flt(d.tax_amount) for d in doc.get("other_charges") 
 			if cint(d.is_excise_account) == 1])
-	doc.excise_amount_in_words = money_in_words(doc.excise_amount, get_company_currency(self.doc.company))
+	doc.excise_amount_in_words = money_in_words(doc.excise_amount, get_company_currency(doc.company))
