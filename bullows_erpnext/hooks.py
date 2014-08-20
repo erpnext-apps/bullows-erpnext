@@ -69,6 +69,8 @@ hide_in_installer = True
 doc_events = {
 	"Sales Invoice": {
 		"validate": "bullows_erpnext.bullows_erpnext.sales_invoice.validate",
+		"on_submit": "bullows_erpnext.bullows_erpnext.sales_invoice.update_project_status",
+		"on_cancel": "bullows_erpnext.bullows_erpnext.sales_invoice.update_project_status",
 	},
 	"Purchase Order": {
 		"validate": "bullows_erpnext.bullows_erpnext.purchase_order.custom_validate"

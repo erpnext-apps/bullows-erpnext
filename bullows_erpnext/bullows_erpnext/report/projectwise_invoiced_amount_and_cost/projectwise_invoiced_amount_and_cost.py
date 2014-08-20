@@ -67,33 +67,38 @@ def get_project_details(filters):
 			est_material_cost, project_value, gross_margin_value
 		from tabProject
 		where
-			docstatus < 2 and company=%s {conditions}
-		""".format(conditions=get_conditions(filters)), filters.company, as_dict=1)
+			docstatus < 2 and company=%(company)s {conditions}
+		""".format(conditions=get_conditions(filters)), filters, as_dict=1)
 
 def get_invoiced_amount(filters):
 	projectwise_invoiced_amount = frappe._dict()
 
-	conditions = " and project_name={}".format(filters.project) if filters.get("project") else ""
+	conditions = " and project_name=%(project)s" if filters.get("project") else ""
 
 	for si in frappe.db.sql("""select project_name, is_billable, sum(ifnull(net_total, 0)) as amount
-		from `tabSales Invoice` where docstatus=1 and posting_date<%s {0}
-		group by project_name, is_billable""".format(conditions), filters.get("report_date"), as_dict=1):
+		from `tabSales Invoice` where docstatus=1 and posting_date<%(report_date)s {0}
+		group by project_name, is_billable""".format(conditions), filters, as_dict=1):
 			projectwise_invoiced_amount.setdefault(si.project_name, {
-				"billable": si.amount if si.is_billable=="Y" else 0,
-				"non_billable": si.amount if si.is_billable=="N" else 0
+				"billable": 0,
+				"non_billable": 0
 			})
+			if si.is_billable == "Y":
+				projectwise_invoiced_amount[si.project_name]["billable"] = si.amount
+			else:
+				projectwise_invoiced_amount[si.project_name]["non_billable"] = si.amount
+
 
 	return projectwise_invoiced_amount
 
 def get_received_amount(filters):
 	projectwise_received_amount = frappe._dict()
 
-	conditions = " and project_name={}".format(filters.project) if filters.get("project") else ""
+	conditions = " and t2.project_name=%(project)s" if filters.get("project") else ""
 
 	for pr in frappe.db.sql("""select t2.project_name, sum(t2.amount) as amount
 		from `tabPurchase Receipt` t1, `tabPurchase Receipt Item` t2
-		where t1.name = t2.parent and t2.docstatus = 1 and t1.posting_date <= %s {0}
-		group by t2.project_name""".format(conditions), filters.get("report_date"), as_dict=1):
+		where t1.name = t2.parent and t2.docstatus = 1 and t1.posting_date <= %(report_date)s {0}
+		group by t2.project_name""".format(conditions), filters, as_dict=1):
 			projectwise_received_amount.setdefault(pr.project_name, pr.amount)
 
 	return projectwise_received_amount
@@ -101,8 +106,8 @@ def get_received_amount(filters):
 def get_conditions(filters):
 	conditions = ""
 	if filters.get("customer"):
-		conditions += " and customer={0}".format(filters.customer)
+		conditions += " and customer=%(customer)s"
 	if filters.get("project"):
-		conditions += " and name={0}".format(filters.project)
+		conditions += " and name=%(project)s"
 
 	return conditions
