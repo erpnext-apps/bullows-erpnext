@@ -11,7 +11,7 @@ def validate(doc, method):
 
 def validate_for_stock_item(doc):
 	stock_item_lst = []
-	for d in doc.get("entries"):
+	for d in doc.get("items"):
 		is_stock_item = frappe.db.get_value("Item", d.item_code, "is_stock_item")
 		if is_stock_item == "Yes":
 			if d.sales_order and not d.delivery_note:
@@ -33,7 +33,7 @@ def validate_invoice_amount_against_project(doc):
 
 		proj_val = frappe.db.get_value("Project", doc.project_name, "project_value")
 
-		if (billable_invoiced_amount + flt(doc.net_total)) > proj_val:
+		if (billable_invoiced_amount + flt(doc.base_net_total)) > proj_val:
 			frappe.throw(_("Total Value of Project exceeded."))
 
 def update_project_status(doc, method):
@@ -45,7 +45,7 @@ def update_project_status(doc, method):
 		frappe.db.set_value("Project", doc.project_name, "status", status)
 
 def get_billable_invoiced_amount_against_project(doc):
-	billable_invoiced_amount = frappe.db.sql("""select sum(net_total) from `tabSales Invoice`
+	billable_invoiced_amount = frappe.db.sql("""select sum(base_net_total) from `tabSales Invoice`
 		where project_name = %s and docstatus = 1
 		and is_billable = 'Y'""", doc.project_name)
 
@@ -56,6 +56,6 @@ def calculate_excise_amount(doc):
 	from frappe.utils import money_in_words
 	from erpnext.setup.utils import get_company_currency
 
-	doc.excise_amount = sum([flt(d.tax_amount) for d in doc.get("other_charges")
+	doc.excise_amount = sum([flt(d.base_tax_amount) for d in doc.get("taxes")
 			if cint(d.is_excise_account) == 1])
 	doc.excise_amount_in_words = money_in_words(doc.excise_amount, get_company_currency(doc.company))
