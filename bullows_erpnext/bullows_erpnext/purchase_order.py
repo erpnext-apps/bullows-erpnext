@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import frappe
 
 def custom_validate(doc, method):
-	for d in doc.get("po_details"):
+	for d in doc.get("items"):
 		if d.is_scrapped_item == "No":
 			if not d.rate:
 				frappe.throw("Row {0}: Rate is mandatory".format(d.idx))
