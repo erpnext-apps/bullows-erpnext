@@ -13,7 +13,7 @@ def validate_for_stock_item(doc):
 	stock_item_lst = []
 	for d in doc.get("items"):
 		is_stock_item = frappe.db.get_value("Item", d.item_code, "is_stock_item")
-		if is_stock_item == "Yes":
+		if is_stock_item:
 			if d.sales_order and not d.delivery_note:
 				dn_exists = frappe.db.sql("""select t1.name
 					from `tabDelivery Note` t1, `tabDelivery Note Item` t2
