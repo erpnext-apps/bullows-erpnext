@@ -31,7 +31,7 @@ def validate_invoice_amount_against_project(doc):
 	if doc.is_billable == 'Y' and doc.project_name:
 		billable_invoiced_amount = get_billable_invoiced_amount_against_project(doc)
 
-		proj_val = frappe.db.get_value("Project", doc.project_name, "project_value")
+		proj_val = frappe.db.get_value("Project", doc.project_name, "estimated_costing")
 
 		if (billable_invoiced_amount + flt(doc.base_net_total)) > proj_val:
 			frappe.throw(_("Total Value of Project exceeded."))
@@ -39,7 +39,7 @@ def validate_invoice_amount_against_project(doc):
 def update_project_status(doc, method):
 	if doc.is_billable == 'Y' and doc.project_name:
 		billable_invoiced_amount = get_billable_invoiced_amount_against_project(doc)
-		proj_val = frappe.db.get_value("Project", doc.project_name, "project_value")
+		proj_val = frappe.db.get_value("Project", doc.project_name, "estimated_costing")
 
 		status = "Completed" if billable_invoiced_amount == proj_val else "Open"
 		frappe.db.set_value("Project", doc.project_name, "status", status)
