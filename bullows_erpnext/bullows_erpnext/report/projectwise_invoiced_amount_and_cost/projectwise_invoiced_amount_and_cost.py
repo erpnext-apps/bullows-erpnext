@@ -30,17 +30,17 @@ def get_results(filters):
 
 	res = []
 	for d in project_details:
-		r = [d.name, d.project_name, d.status, d.customer, d.territory, d.project_value,
-			d.est_material_cost, d.estimated_cost_bo, d.total_estimated_cost, d.gross_margin_value]
+		r = [d.name, d.project_name, d.status, d.customer, d.territory, d.estimated_costing,
+			d.est_material_cost, d.estimated_cost_bo, d.total_estimated_cost, d.gross_margin]
 
 		# Invoiced amount
 		billable_invoiced_amount = flt(projectwise_invoiced_amount.get(d.name, {}).get("billable"))
 		non_billable_invoiced_amount = flt(projectwise_invoiced_amount.get(d.name, {}).get("non_billable"))
 
 		# Pending to Invoice
-		pending_to_invoice = flt(d.project_value) - billable_invoiced_amount
-		pending_to_invoice_percentage = pending_to_invoice * 100 / flt(d.project_value) \
-			if d.project_value else 0
+		pending_to_invoice = flt(d.estimated_costing) - billable_invoiced_amount
+		pending_to_invoice_percentage = pending_to_invoice * 100 / flt(d.estimated_costing) \
+			if d.estimated_costing else 0
 
 		# Received Amount
 		received_amount = flt(projectwise_received_amount.get(d.name))
@@ -64,7 +64,7 @@ def get_project_details(filters):
 	return frappe.db.sql("""
 		select
 			name, project_name, status, territory, customer, estimated_cost_bo, total_estimated_cost,
-			est_material_cost, project_value, gross_margin_value
+			est_material_cost, estimated_costing, gross_margin
 		from tabProject
 		where
 			docstatus < 2 and company=%(company)s {conditions}
