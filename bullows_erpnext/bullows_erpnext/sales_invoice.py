@@ -28,26 +28,26 @@ def validate_for_stock_item(doc):
 		frappe.throw(_("Please create Delivery Note before creating Sales Invoice for item(s) {0} as this is stock item.").format(','.join(stock_item_lst)))
 
 def validate_invoice_amount_against_project(doc):
-	if doc.is_billable == 'Y' and doc.project_name:
+	if doc.is_billable == 'Y' and doc.project:
 		billable_invoiced_amount = get_billable_invoiced_amount_against_project(doc)
 
-		proj_val = frappe.db.get_value("Project", doc.project_name, "estimated_costing")
+		proj_val = frappe.db.get_value("Project", doc.project, "estimated_costing")
 
 		if (billable_invoiced_amount + flt(doc.base_net_total)) > proj_val:
 			frappe.throw(_("Total Value of Project exceeded."))
 
 def update_project_status(doc, method):
-	if doc.is_billable == 'Y' and doc.project_name:
+	if doc.is_billable == 'Y' and doc.project:
 		billable_invoiced_amount = get_billable_invoiced_amount_against_project(doc)
-		proj_val = frappe.db.get_value("Project", doc.project_name, "estimated_costing")
+		proj_val = frappe.db.get_value("Project", doc.project, "estimated_costing")
 
 		status = "Completed" if billable_invoiced_amount == proj_val else "Open"
-		frappe.db.set_value("Project", doc.project_name, "status", status)
+		frappe.db.set_value("Project", doc.project, "status", status)
 
 def get_billable_invoiced_amount_against_project(doc):
 	billable_invoiced_amount = frappe.db.sql("""select sum(base_net_total) from `tabSales Invoice`
-		where project_name = %s and docstatus = 1
-		and is_billable = 'Y'""", doc.project_name)
+		where project = %s and docstatus = 1
+		and is_billable = 'Y'""", doc.project)
 
 	billable_invoiced_amount = flt(billable_invoiced_amount[0][0]) if billable_invoiced_amount else 0.0
 	return billable_invoiced_amount
