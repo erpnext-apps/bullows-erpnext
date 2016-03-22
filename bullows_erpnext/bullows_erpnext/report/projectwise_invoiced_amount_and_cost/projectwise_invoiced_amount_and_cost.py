@@ -30,7 +30,7 @@ def get_results(filters):
 
 	res = []
 	for d in project_details:
-		r = [d.name, d.project_name, d.status, d.customer, d.territory, d.estimated_costing,
+		r = [d.name, d.project, d.status, d.customer, d.territory, d.estimated_costing,
 			d.est_material_cost, d.estimated_cost_bo, d.total_estimated_cost, d.gross_margin]
 
 		# Invoiced amount
@@ -73,19 +73,19 @@ def get_project_details(filters):
 def get_invoiced_amount(filters):
 	projectwise_invoiced_amount = frappe._dict()
 
-	conditions = " and project_name=%(project)s" if filters.get("project") else ""
+	conditions = " and project=%(project)s" if filters.get("project") else ""
 
-	for si in frappe.db.sql("""select project_name, is_billable, sum(ifnull(base_net_total, 0)) as amount
+	for si in frappe.db.sql("""select project, is_billable, sum(ifnull(base_net_total, 0)) as amount
 		from `tabSales Invoice` where docstatus=1 and posting_date<%(report_date)s {0}
-		group by project_name, is_billable""".format(conditions), filters, as_dict=1):
-			projectwise_invoiced_amount.setdefault(si.project_name, {
+		group by project, is_billable""".format(conditions), filters, as_dict=1):
+			projectwise_invoiced_amount.setdefault(si.project, {
 				"billable": 0,
 				"non_billable": 0
 			})
 			if si.is_billable == "Y":
-				projectwise_invoiced_amount[si.project_name]["billable"] = si.amount
+				projectwise_invoiced_amount[si.project]["billable"] = si.amount
 			else:
-				projectwise_invoiced_amount[si.project_name]["non_billable"] = si.amount
+				projectwise_invoiced_amount[si.project]["non_billable"] = si.amount
 
 
 	return projectwise_invoiced_amount
@@ -93,13 +93,13 @@ def get_invoiced_amount(filters):
 def get_received_amount(filters):
 	projectwise_received_amount = frappe._dict()
 
-	conditions = " and t2.project_name=%(project)s" if filters.get("project") else ""
+	conditions = " and t2.project=%(project)s" if filters.get("project") else ""
 
-	for pr in frappe.db.sql("""select t2.project_name, sum(t2.base_net_amount) as amount
+	for pr in frappe.db.sql("""select t2.project, sum(t2.base_net_amount) as amount
 		from `tabPurchase Receipt` t1, `tabPurchase Receipt Item` t2
 		where t1.name = t2.parent and t2.docstatus = 1 and t1.posting_date <= %(report_date)s {0}
-		group by t2.project_name""".format(conditions), filters, as_dict=1):
-			projectwise_received_amount.setdefault(pr.project_name, pr.amount)
+		group by t2.project""".format(conditions), filters, as_dict=1):
+			projectwise_received_amount.setdefault(pr.project, pr.amount)
 
 	return projectwise_received_amount
 
