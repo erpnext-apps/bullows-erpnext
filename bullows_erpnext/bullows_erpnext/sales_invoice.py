@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-import frappe
+import frappe, erpnext
 from frappe.utils import flt, cint
 from frappe import _
 
@@ -54,8 +54,7 @@ def get_billable_invoiced_amount_against_project(doc):
 
 def calculate_excise_amount(doc):
 	from frappe.utils import money_in_words
-	from erpnext.setup.utils import get_company_currency
 
 	doc.excise_amount = sum([flt(d.base_tax_amount) for d in doc.get("taxes")
 			if cint(d.is_excise_account) == 1])
-	doc.excise_amount_in_words = money_in_words(doc.excise_amount, get_company_currency(doc.company))
+	doc.excise_amount_in_words = money_in_words(doc.excise_amount, erpnext.get_company_currency(doc.company))
