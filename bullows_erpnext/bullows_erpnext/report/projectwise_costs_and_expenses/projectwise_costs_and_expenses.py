@@ -44,7 +44,7 @@ def get_results(filters):
 	for d in project_details:
 		r = [d.name, d.project, d.status, d.customer, d.territory, d.estimated_costing,
 			d.est_material_cost, d.estimated_cost_bo,
-                        d.estimated_cost_labour, d.estimated_cost_pf, d.estimated_cost_fright, d.estimated_cost_enc
+                        d.estimated_cost_labour, d.estimated_cost_pf, d.estimated_cost_fright, d.estimated_cost_enc,
                         d.total_estimated_cost, d.gross_margin]
 
 		# Invoiced amount
@@ -60,7 +60,11 @@ def get_results(filters):
 		received_amount = flt(projectwise_received_amount.get(d.name))
 
                 # Total Issue Slip
+                tissue_slip = get_stock_entry_sum(d.name, "and naming_series='STE-'")
+                #raise ValueError(qres[0][0])
+                
                 # Total Packing Slip
+                tpack_slip = get_stock_entry_sum(d.name, "and naming_series='STE-'")
 
 		# Gross margin value
 		gross_margin = billable_invoiced_amount - received_amount
@@ -70,12 +74,16 @@ def get_results(filters):
 			if billable_invoiced_amount else 0
 
 		# Total Expenses Material Purchase
+		texp_material = get_journal_entry_sum(d.name, "and account='71010-0000-PURCHASE RAW MATERIALS'")
 		# Total Expenses Labour
 		# Total P and F
 		# Total Freight
 		# Total ENC
 		# Total Expenses 
 		# Actual P/L
+		total_estimated = d.est_material_cost + d.estimated_cost_bo + d.estimated_cost_labour + d.estimated_cost_pf + d.estimated_cost_fright + d.estimated_cost_enc
+		total_actual = 0
+		actual_pnl = total_actual - total_estimated
 		# P/L (%)
 
 		r += [billable_invoiced_amount, non_billable_invoiced_amount, pending_to_invoice,
@@ -137,3 +145,9 @@ def get_conditions(filters):
 		conditions += " and name=%(project)s"
 
 	return conditions
+
+def get_stock_entry_sum(proj, condition):
+        return frappe.db.sql("select sum(total_amount) from `tabStock Entry` where docstatus=1 and project={project} {conditions}".format(conditions=condition, project=proj), as_list=1)
+
+def get_journal_entry_sum(proj, condition):
+        return frappe.db.sql("select sum(total_amount) from `tabJournal Entry Account` where docstatus=1 and cost_center={project} {conditions}".format(conditions=condition, project=proj), as_list=1)
