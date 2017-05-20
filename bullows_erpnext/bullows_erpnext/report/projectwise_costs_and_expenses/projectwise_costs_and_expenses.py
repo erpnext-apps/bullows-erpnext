@@ -34,8 +34,7 @@ def get_columns():
                 ]
 
 
-def get_results(filters):
-        return []
+def get_results(filters):        
 	project_details = get_project_details(filters)
 	projectwise_invoiced_amount = get_invoiced_amount(filters)
 	projectwise_received_amount = get_received_amount(filters)
@@ -60,11 +59,11 @@ def get_results(filters):
 		received_amount = flt(projectwise_received_amount.get(d.name))
 
                 # Total Issue Slip
-                tissue_slip = get_stock_entry_sum(d.name, "and naming_series='STE-'")
+                tissue_slip = get_transaction_sum("total_amount","tabStock Entry",d.name, "and naming_series='STE-'") or 0
                 #raise ValueError(qres[0][0])
                 
                 # Total Packing Slip
-                tpack_slip = get_stock_entry_sum(d.name, "and naming_series='STE-'")
+                tpack_slip = get_transaction_sum("grand_total","tabDelivery Note",d.name, "and naming_series='DN-'") or 0
 
 		# Gross margin value
 		gross_margin = billable_invoiced_amount - received_amount
@@ -74,20 +73,28 @@ def get_results(filters):
 			if billable_invoiced_amount else 0
 
 		# Total Expenses Material Purchase
-		texp_material = get_journal_entry_sum(d.name, "and account='71010-0000-PURCHASE RAW MATERIALS'")
+		pcc = d.name + " - Bullows"
+		texp_material = get_parent_account_entry_sum(pcc, "parent_account='71010-0000-PURCHASE RAW MATERIALS - Bullows'") or 0
 		# Total Expenses Labour
+		texp_labour = get_account_entry_sum(pcc, "and account='74020-0000-LABOUR CHARGES - Bullows'")[0].get("debit") or 0
 		# Total P and F
+		texp_pf = get_account_entry_sum(pcc, "and account='74090-0000-PACKING & FORWARDING CHARGES - Bullows'")[0].get("debit") or 0
 		# Total Freight
+		texp_freight = get_account_entry_sum(pcc, "and account='74110-0000-FREIGHT OUTWARD - Bullows'")[0].get("debit") or 0
 		# Total ENC
-		# Total Expenses 
+		texp_enc = get_account_entry_sum(pcc, "and account='74372-0000-ERECTION & COMMISSIONING EXPS. - Bullows'")[0].get("debit") or 0
+		# Total Expenses
+		texp = get_account_entry_sum(pcc, "")[0].get("debit") or 0
 		# Actual P/L
 		total_estimated = d.est_material_cost + d.estimated_cost_bo + d.estimated_cost_labour + d.estimated_cost_pf + d.estimated_cost_fright + d.estimated_cost_enc
-		total_actual = 0
+		total_actual = flt(texp)
 		actual_pnl = total_actual - total_estimated
 		# P/L (%)
 
 		r += [billable_invoiced_amount, non_billable_invoiced_amount, pending_to_invoice,
-			pending_to_invoice_percentage, received_amount, gross_margin, gross_margin_percentage]
+			pending_to_invoice_percentage, received_amount,
+                        tissue_slip, tpack_slip, gross_margin, gross_margin_percentage,
+                        texp_material, texp_labour, texp_pf, texp_freight, texp_enc, texp, actual_pnl]
 
 		res.append(r)
 
@@ -146,8 +153,25 @@ def get_conditions(filters):
 
 	return conditions
 
-def get_stock_entry_sum(proj, condition):
-        return frappe.db.sql("select sum(total_amount) from `tabStock Entry` where docstatus=1 and project={project} {conditions}".format(conditions=condition, project=proj), as_list=1)
+def get_transaction_sum(sumvar, trans, proj, condition):
+        res = frappe.db.sql("""select sum({sumvar})
+                                from `{trans}`
+                                where docstatus=1 and project='{project}' {conditions}""".format(conditions=condition,
+                                                                                                 project=proj, trans=trans,sumvar=sumvar), as_list=1)
+        return res[0][0]
 
-def get_journal_entry_sum(proj, condition):
-        return frappe.db.sql("select sum(total_amount) from `tabJournal Entry Account` where docstatus=1 and cost_center={project} {conditions}".format(conditions=condition, project=proj), as_list=1)
+def get_account_entry_sum(proj, condition):
+        res = frappe.db.sql("""select sum(credit) as credit, sum(debit) as debit
+                                from `tabGL Entry`
+                                where docstatus=1 and cost_center='{project}' {conditions}""".format(conditions=condition, project=proj), as_dict=1)
+        return res
+
+def get_parent_account_entry_sum(proj, condition):
+        cacc = frappe.db.sql("""select account_name from `tabAccount` where {conditions}""".format(conditions=condition), as_dict=1)
+        exptotal = 0
+        for c in cacc:
+                res = frappe.db.sql("""select sum(credit) as credit, sum(debit) as debit
+                                from `tabGL Entry`
+                                where docstatus=1 and cost_center='{project}' and account='{account}'""".format(account=c.account_name+' - Bullows', project=proj), as_dict=1)
+                exptotal += flt(res[0].debit)
+        return exptotal
