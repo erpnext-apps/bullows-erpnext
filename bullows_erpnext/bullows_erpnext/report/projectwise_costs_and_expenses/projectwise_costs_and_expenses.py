@@ -86,7 +86,13 @@ def get_results(filters):
 		# Total Expenses
 		texp = get_account_entry_sum(pcc, "")[0].get("debit") or 0
 		# Actual P/L
-		total_estimated = d.est_material_cost + d.estimated_cost_bo + d.estimated_cost_labour + d.estimated_cost_pf + d.estimated_cost_fright + d.estimated_cost_enc
+		emc = d.est_material_cost or 0
+		ecb = d.estimated_cost_bo or 0
+		ecl = d.estimated_cost_labour or 0
+		ecpf = d.estimated_cost_pf or 0
+		ecf = d.estimated_cost_fright or 0
+		ece = d.estimated_cost_enc or 0		
+		total_estimated = emc + ecb + ecl + ecpf + ecf + ece
 		total_actual = flt(texp)
 		actual_pnl = total_actual - total_estimated
 		# P/L (%)
