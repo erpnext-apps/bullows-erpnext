@@ -58,12 +58,12 @@ def get_results(filters):
 		# Received Amount
 		received_amount = flt(projectwise_received_amount.get(d.name))
 
-                # Total Issue Slip
-                tissue_slip = get_transaction_sum("total_amount","tabStock Entry",d.name, "and naming_series='STE-'") or 0
-                #raise ValueError(qres[0][0])
-                
-                # Total Packing Slip
-                tpack_slip = get_transaction_sum("grand_total","tabDelivery Note",d.name, "and naming_series='DN-'") or 0
+		# Total Issue Slip
+		tissue_slip = get_transaction_sum("total_amount","tabStock Entry",d.name, "and naming_series='STE-'") or 0
+		#raise ValueError(qres[0][0])
+
+		# Total Packing Slip
+		tpack_slip = get_transaction_sum("grand_total","tabDelivery Note",d.name, "and naming_series='DN-'") or 0
 
 		# Gross margin value
 		gross_margin = billable_invoiced_amount - received_amount
